@@ -21,18 +21,64 @@ public class InnolabContext : DbContext
     }}
 ```
 
+#### Infrastructure - Repository
+```cs
+public class Repository<TEntity, TKey> where TEntity : class, IEntity<TKey> where TKey : struct 
+{ 
+    protected readonly InnoLabContext _db; 
+    public IQueryable<TEntity> Set => _db.Set<TEntity>(); 
+    public Repository(InnoLabContext db) => _db = db; 
+    public virtual (bool success, string message) InsertOne(TEntity entity) 
+    { 
+        _db.Set<TEntity>().Add(entity); 
+        // _db.Set<TEntity>().Remove(entity);  <- DELETE 
+        // _db.Set<TEntity>().Update(entity);  <- UPDATE 
+        try 
+        { 
+            _db.SaveChanges(); 
+        } 
+        catch (DbUpdateException e) 
+        { 
+            return (false, e.InnerException?.Message ?? e.Message); 
+        } 
+        return (true, string.Empty);    
+    } 
+
+    public (bool success, string message, TEntity? entity) GetById(TKey id) 
+    { 
+        try 
+        { 
+            var entity = _db.Set<TEntity>().Local.FirstOrDefault(e => e.Id.Equals(id)) ?? _db.Set<TEntity>().Find(id); 
+
+            return entity == null ? (true, $"No entity with ID {id} found.", null) : (true, string.Empty, entity); 
+        } 
+        catch (DbUpdateException e) 
+        { 
+            return (false, e.InnerException?.Message ?? e.Message, null); 
+        }     
+    } 
+}
+```
+
 #### Domain Model
 
 ```cs
-#pragma warning disable CS8618
-protected DefaultConstructor(){}
+public interface IEntity<TKey> where TKey : struct 
+{ TKey Id { get; } } 
+```
 
-[Key]
-[DatabaseGenerated(DatabaseGeneratedOption.None)]
-public int AutoIncKeyWithoutNamingConvention { get; private set; }
-[Required]  // not null
-[StringLength(25)] // max string length
-public string Email { get; set; }
+```cs
+public class MyClass: IEntity<int> {  // inherit from IEntity
+    #pragma warning disable CS8618
+    protected DefaultConstructor(){}
+
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.None)]
+    public int AutoIncKeyWithoutNamingConvention { get; private set; }
+    [Required]  // not null
+    [StringLength(25)] // max string length
+    public string Email { get; set; }
+}
 ```
 
 Unique constraint + enum conversion:
