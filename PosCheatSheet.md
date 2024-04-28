@@ -18,6 +18,13 @@ public class InnolabContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)  
     {        modelBuilder.Entity<InnolabUser>().HasIndex(u => u.Email).IsUnique();  
     }}
+    
+    public async Task Seed(){
+        var users = new List<InnolabUser> {  
+            new InnolabUser("admin", "admin")
+        };
+        Users.AddRange(users);
+        await SaveChangesAsync();
 ```
 
 #### Infrastructure - Repository
@@ -283,7 +290,6 @@ GroupBy: Groups the elements of a sequence.
 var groupedByStandard = context.Students.GroupBy(s => s.StandardId);
 ```
 
-
 #### Web API
 
 Basic structure of a controller:
@@ -307,3 +313,28 @@ Basic structure of a controller:
     }
 }
 ```
+
+Command / DTO object (it's the same):
+```cs
+public record CreateClothingCmd(
+    ClothingType Type,
+    [StringLength(64, MinimumLength = 1, ErrorMessage = "Name must be between 1 and 64 characters")]
+    string Name,
+    [StringLength(256, ErrorMessage = "Image URL must be less than 256 characters")]
+    string? ImageUrl,
+    Guid OwnerGuid,
+    Guid[] Tags
+) : IValidatableObject
+{
+    // example *custom validation*. ! if not needed, remove IValidatableObject !
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        var db = validationContext.GetRequiredService<DesignerContext>();
+        if (!db.Users.Any(u => u.Guid == OwnerGuid))
+            yield return new ValidationResult("Owner not found", new[] {nameof(OwnerGuid)});
+    }
+}
+
+#### Misc
+
+Concatenate two strings: `string Combined => $"{Brand} {Model}";`
