@@ -202,13 +202,53 @@ public async Task GetIngredients_ReturnsOkResultWithCorrectList()
 }
 ```
 
-#### LINQ
 
+#### Linq
 when doing queries that access other class properties do this to include all of their information:
-(DividerBoxes has a list of locations which then has a reference to a Room)
 ```cs
-_dbc.DividerBoxes.Include(a => a.DividerBoxLocations).ThenInclude(a => a.StorageRoomNavigation);
+_dbc.DividerBoxes.Include(a => a.DividerBoxLocations).ThenInclude(a =>
+a.StorageRoomNavigation);
 ```
+
+SingleOrDefault: Returns a single specific element or default if none or more than one element exists.
+```cs
+var student = context.Students.SingleOrDefault(s => s.StudentId == 1);
+```
+Count: Returns the total number of elements in a sequence.
+```cs
+int count = context.Students.Count();
+```
+Any: Checks if any elements in a sequence satisfy a condition.
+```cs
+bool exists = context.Students.Any(s => s.Grade > 3);
+```
+
+Sum: Computes the sum of a sequence of numeric values.
+```cs
+int totalScore = context.Students.Sum(s => s.Score);
+```
+Max and Min: Finds the maximum or minimum value in a sequence.
+```cs
+var maxScore = context.Students.Max(s => s.Score);
+var minScore = context.Students.Min(s => s.Score);
+```
+ToList: Converts an IQueryable or IEnumerable to a List.
+```cs
+var studentList = context.Students.ToList();
+```
+First / FirstOrDefault: Returns the first element of a sequence, or a default value if no element is found.
+```cs
+var student = context.Students.FirstOrDefault(s => s.Name == "John");
+```
+OrderBy / OrderByDescending: Sorts the elements of a sequence in ascending or descending order.
+```cs
+var sortedStudents = context.Students.OrderBy(s => s.Name);
+```
+GroupBy: Groups the elements of a sequence.
+```cs
+var groupedByStandard = context.Students.GroupBy(s => s.StandardId);
+```
+
 
 #### Web API
 
