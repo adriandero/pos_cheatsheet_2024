@@ -16,15 +16,14 @@ public class InnolabContext : DbContext
     public DbSet<InnolabUser> Users => Set<InnolabUser>();  
     public DbSet<Reservation> Reservations => Set<Reservation>();  
     protected override void OnModelCreating(ModelBuilder modelBuilder)  
-    {        modelBuilder.Entity<InnolabUser>().HasIndex(u => u.Email).IsUnique();  
-    }}
+    { modelBuilder.Entity<InnolabUser>().HasIndex(u => u.Email).IsUnique(); }
     
     public async Task Seed(){
-        var users = new List<InnolabUser> {  
-            new InnolabUser("admin", "admin")
-        };
+        var users = new List<InnolabUser> { new InnolabUser("admin", "admin") };
         Users.AddRange(users);
         await SaveChangesAsync();
+    }
+}   
 ```
 
 #### Infrastructure - Repository
@@ -334,6 +333,7 @@ public record CreateClothingCmd(
             yield return new ValidationResult("Owner not found", new[] {nameof(OwnerGuid)});
     }
 }
+```
 
 #### Misc
 
