@@ -164,7 +164,8 @@ public class DatabaseTest : IDisposable
     protected readonly InnolabContext _db;  
   
     public DatabaseTest()  
-    {        _connection = new SqliteConnection("DataSource=:memory:");  
+    {      
+        _connection = new SqliteConnection("DataSource=:memory:");  
         _connection.Open();  
         var options = new DbContextOptionsBuilder<InnolabContext>()  
             .UseSqlite(_connection)  
@@ -180,6 +181,39 @@ public class DatabaseTest : IDisposable
 	    db.Dispose();  
         _connection.Dispose();  
     }}
+```
+
+Faker + Assertions / example test:
+```cs
+public class MyContextTests: DatabaseTest
+{
+    [Fact]
+    public void CreateDatabaseTest() {
+        Assert.True(true);  // DatabaseTest constructor is called without exception
+    }}
+---
+public class UserTests : DatabaseTest
+{
+    private readonly UserRepository _userRepository;
+    public static User GenerateUser()
+    {
+        var faker = new Faker<User>()
+            .CustomInstantiator(f => new User(
+                username: f.Internet.UserName(),
+                initialPassword: f.Internet.Password()
+            )
+        );
+        return faker.Generate();
+    }
+    [Fact]
+    public void AddUserSuccessTest()
+    {
+        var user = GenerateUser();
+        var (success, _) = _userRepository.InsertOne(user);
+        Assert.True(success);
+        Assert.Equal(1, _db.Users.Count());
+        // common asserts: Assert.Empty, Assert.Single, Assert.NotEqual, Assert.Contains, Assert.DoesNotContain
+    }
 ```
 
 #### NSUbstitute
