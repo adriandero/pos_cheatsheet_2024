@@ -44,11 +44,11 @@ modelBuilder.Entity<Reservation>().Property(r => r.State).HasConversion<string>(
 Custom enum conversion:
 ```cs
 modelBuilder.Entity<Reservation>().Property(r => r.State)
-    .HasConversion(
-        // Convert enum to uppercase string when saving to the database
-        v => v.ToString().ToUpper(),  
-        // Convert from string to enum when reading from the database
-        v => (ReservationStates)Enum.Parse(typeof(ReservationStates), v) 
+.HasConversion(
+    // Convert enum to uppercase string when saving to the database
+    v => v.ToString().ToUpper(),  
+    // Convert from string to enum when reading from the database
+    v => (ReservationStates)Enum.Parse(typeof(ReservationStates), v) 
 );
 ```
 
