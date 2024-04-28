@@ -3,7 +3,7 @@
   
 ###### Microservices   
 > [!WARNING]  
-> This is gemini created based on all the notes from teams we have on microservices so if something is missing or wrong please do change !!!
+> Example callout
 
 
 ### Code
