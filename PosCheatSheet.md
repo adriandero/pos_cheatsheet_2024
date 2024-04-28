@@ -12,8 +12,7 @@
 ```cs
 public class InnolabContext : DbContext  
 {  
-    public InnolabContext(DbContextOptions opt) : base(opt)  
-    {    }  
+    public InnolabContext(DbContextOptions opt) : base(opt) {    }  
     public DbSet<InnolabUser> Users => Set<InnolabUser>();  
     public DbSet<Reservation> Reservations => Set<Reservation>();  
     protected override void OnModelCreating(ModelBuilder modelBuilder)  
@@ -22,6 +21,7 @@ public class InnolabContext : DbContext
 ```
 
 #### Infrastructure - Repository
+
 ```cs
 public class Repository<TEntity, TKey> where TEntity : class, IEntity<TKey> where TKey : struct 
 { 
@@ -49,7 +49,6 @@ public class Repository<TEntity, TKey> where TEntity : class, IEntity<TKey> wher
         try 
         { 
             var entity = _db.Set<TEntity>().Local.FirstOrDefault(e => e.Id.Equals(id)) ?? _db.Set<TEntity>().Find(id); 
-
             return entity == null ? (true, $"No entity with ID {id} found.", null) : (true, string.Empty, entity); 
         } 
         catch (DbUpdateException e) 
@@ -68,6 +67,7 @@ public interface IEntity<TKey> where TKey : struct
 ```
 
 ```cs
+[Index(nameof(Email), IsUnique = true)] // unique constraint on email
 public class MyClass: IEntity<int> {  // inherit from IEntity
     #pragma warning disable CS8618
     protected DefaultConstructor(){}
@@ -81,13 +81,15 @@ public class MyClass: IEntity<int> {  // inherit from IEntity
 }
 ```
 
-Unique constraint + enum conversion:
+Fluent api equivalent + **enum conversion**:
 ```cs
 modelBuilder.Entity<InnolabUser>().HasIndex(u => u.Email).IsUnique();  
 modelBuilder.Entity<Reservation>().Property(r => r.State).HasConversion<string>();
+modelBuilder.Entity<Reservation>().Property(r => r.State).HasConversion<string>().HasMaxLength(25);
 ```
 
 Custom enum conversion:
+
 ```cs
 modelBuilder.Entity<Reservation>().Property(r => r.State)
 .HasConversion(
@@ -98,7 +100,63 @@ modelBuilder.Entity<Reservation>().Property(r => r.State)
 );
 ```
 
+Value objects:
+```cs
+public record Address(
+    string Street, 
+    string City, 
+    string ZipCode
+);
+---
+modelBuilder.Entity<Order>().OwnsOne(p => p.ShippingAddress);
+modelBuilder.Entity<User>().OwnsMany(p => p.Address)
+```
+
+Setting up a **1:1** relation between class `MyClassA` and `MyClassB`.
+```cs
+modelBuilder
+    .Entity<MyClassA>()
+    .HasOne<MyClassB>(a => a.B)
+    .WithOne(b => b.A)
+    .HasForeignKey<MyClassB>(b => b.AId);
+```
+
+Setting up an **1:N** relation between class `MyClassA` and `MyClassB`.
+```cs
+modelBuilder
+    .Entity<MyClassA>()
+    .HasMany<MyClassB>(a => a.Bs)
+    .WithOne(b => b.A)
+    .HasForeignKey(b => b.AId);
+```
+
+Setting up an **M:N** relation between class `MyClassA` and `MyClassB` with `MyClassC` in the middle.
+```cs
+modelBuilder
+    .Entity<MyClassA>()
+    .HasMany<MyClassB>(a => a.Bs)
+    .WithMany(b => b.As)
+    .UsingEntity<MyClassC>();
+```
+
+
+
+Discriminator column for **inheritance**:
+```cs
+modelBuilder.Entity<Human>()
+    .HasDiscriminator<string>("type")
+    .HasValue<Teacher>("teacher")
+    .HasValue<Student>("student");
+```
+
+Table per type:
+```cs
+modelBuilder.Entity<Blog>().ToTable("Human");
+modelBuilder.Entity<RssBlog>().ToTable("Teacher");
+```
+
 Tests:
+
 ```cs
 public class DatabaseTest : IDisposable  
 {  
@@ -122,4 +180,56 @@ public class DatabaseTest : IDisposable
 	    db.Dispose();  
         _connection.Dispose();  
     }}
+```
+
+#### NSUbstitute
+
+```cs
+[Fact]
+public async Task GetIngredients_ReturnsOkResultWithCorrectList()
+{
+    // Mock the IRepository
+    var repository = Substitute.For<IRepository<Ingredient>>();
+    repository.GetAllAsync().Returns(new List<Ingredient> { new Ingredient("Vegan")
+    });
+    var controller = new MyController(repository);
+    // Convert the Result to a usable object
+    var result1 = await controller.GetIngredients();
+    var result2 = (OkObjectResult) result1;
+    // Assert the correct statements
+    Assert.Equal(result2.StatusCode, 200);
+    Assert.Equal(1, result2.Value as List<Ingredient>).Count());
+}
+```
+
+#### LINQ
+
+when doing queries that access other class properties do this to include all of their information:
+(DividerBoxes has a list of locations which then has a reference to a Room)
+```cs
+_dbc.DividerBoxes.Include(a => a.DividerBoxLocations).ThenInclude(a => a.StorageRoomNavigation);
+```
+
+#### Web API
+
+Basic structure of a controller:
+```cs
+    // Necessary attributes
+    [Route("api/[controller]")]
+    [ApiController]
+    public class MyController : ControllerBase
+    {
+    // Inject the necessary dependencies
+    private readonly MyContext _context;
+    public MyController(MyContext context)
+    {
+        _context = context;
+    }
+    // Define a route
+    [HttpGet("{id:int}")]
+    public IActionResult GetSingle(int id)
+    {
+        return Ok(null!);
+    }
+}
 ```
