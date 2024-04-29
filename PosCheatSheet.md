@@ -8,9 +8,10 @@
 
 
 ### Code
-#### UML Guide
-![Alt text](url.png)
 
+#### UML Guide
+
+![Alt text](assets/uml.png)
 
 #### Infrastructure - Context
 
@@ -74,7 +75,7 @@ public class Repository<TEntity, TKey> where TEntity : class, IEntity<TKey> wher
 
 ```cs
 public interface IEntity<TKey> where TKey : struct 
-{ TKey Id { get; } } 
+{ TKey Id { get; } }  // you can also just use int and remove TKey stuff if u get errors
 ```
 
 ```cs
@@ -93,6 +94,7 @@ public class MyClass: IEntity<int> {  // inherit from IEntity
 ```
 
 Fluent api equivalent + **enum conversion**:
+
 ```cs
 modelBuilder.Entity<InnolabUser>().HasIndex(u => u.Email).IsUnique();  
 modelBuilder.Entity<Reservation>().Property(r => r.State).HasConversion<string>();
@@ -112,6 +114,7 @@ modelBuilder.Entity<Reservation>().Property(r => r.State)
 ```
 
 Value objects:
+
 ```cs
 public record Address(
     string Street, 
@@ -122,8 +125,17 @@ public record Address(
 modelBuilder.Entity<Order>().OwnsOne(p => p.ShippingAddress);
 modelBuilder.Entity<User>().OwnsMany(p => p.Address)
 ```
+
+Enum:
+
+```cs
+public enum ReservationStates { Pending, Approved, Denied }
+```
+
 ##### One-to-one 1:1
+
 Required
+
 ```cs
 // Principal (parent)
 public class MyClassA
@@ -149,8 +161,11 @@ modelBuilder
     .WithOne(b => b.A)
     .HasForeignKey<MyClassB>(b => b.AId);
 ```
-##### One-to-many **1:N** 
+
+##### One-to-many **1:N**
+
 Required
+
 ```cs
 // Principal (parent)
 public class MyClassA
@@ -174,7 +189,9 @@ modelBuilder
     .WithOne(b => b.MyClassA)
     .HasForeignKey(b => b.MyClassAId);
 ```
+
 ##### Many-to-many M:N
+
 ```cs
 public class MyClassA
 {
@@ -206,9 +223,24 @@ modelBuilder
     .UsingEntity<MyClassC>();
 ```
 
+Another way to do **M:N**:
 
+```cs
+class Item: IEntity
+{
+    // ...
+    protected List<Tag> _tags = [];
+    public IReadOnlyCollection<Tag> Tags => _tags;
+}
+class Tag: IEntity
+{
+    // ...
+    public ICollection<Item> Items;;
+}
+```
 
-Discriminator column for **inheritance**:
+Discriminator column for **inheritance** (Table per hierarchy)
+
 ```cs
 modelBuilder.Entity<Human>()
     .HasDiscriminator<string>("type")
@@ -217,9 +249,10 @@ modelBuilder.Entity<Human>()
 ```
 
 Table per type:
+
 ```cs
-modelBuilder.Entity<Blog>().ToTable("Human");
-modelBuilder.Entity<RssBlog>().ToTable("Teacher");
+modelBuilder.Entity<Teacher>().ToTable("Teachers");
+modelBuilder.Entity<Student>().ToTable("Students");
 ```
 
 Tests:
@@ -251,6 +284,7 @@ public class DatabaseTest : IDisposable
 ```
 
 Faker + Assertions / example test:
+
 ```cs
 public class MyContextTests: DatabaseTest
 {
@@ -303,49 +337,66 @@ public async Task GetIngredients_ReturnsOkResultWithCorrectList()
 }
 ```
 
-
 #### Linq
+
 when doing queries that access other class properties do this to include all of their information:
+
 ```cs
 _dbc.DividerBoxes.Include(a => a.DividerBoxLocations).ThenInclude(a =>
 a.StorageRoomNavigation);
 ```
 
 SingleOrDefault: Returns a single specific element or default if none or more than one element exists.
+
 ```cs
 var student = context.Students.SingleOrDefault(s => s.StudentId == 1);
 ```
+
 Count: Returns the total number of elements in a sequence.
+
 ```cs
 int count = context.Students.Count();
 ```
+
 Any: Checks if any elements in a sequence satisfy a condition.
+
 ```cs
 bool exists = context.Students.Any(s => s.Grade > 3);
 ```
 
 Sum: Computes the sum of a sequence of numeric values.
+
 ```cs
 int totalScore = context.Students.Sum(s => s.Score);
 ```
+
 Max and Min: Finds the maximum or minimum value in a sequence.
+
 ```cs
 var maxScore = context.Students.Max(s => s.Score);
 var minScore = context.Students.Min(s => s.Score);
 ```
+
 ToList: Converts an IQueryable or IEnumerable to a List.
+
 ```cs
 var studentList = context.Students.ToList();
 ```
+
 First / FirstOrDefault: Returns the first element of a sequence, or a default value if no element is found.
+
 ```cs
 var student = context.Students.FirstOrDefault(s => s.Name == "John");
 ```
+
 OrderBy / OrderByDescending: Sorts the elements of a sequence in ascending or descending order.
+
 ```cs
 var sortedStudents = context.Students.OrderBy(s => s.Name);
 ```
+
 GroupBy: Groups the elements of a sequence.
+
 ```cs
 var groupedByStandard = context.Students.GroupBy(s => s.StandardId);
 ```
@@ -353,6 +404,7 @@ var groupedByStandard = context.Students.GroupBy(s => s.StandardId);
 #### Web API
 
 Basic structure of a controller:
+
 ```cs
     // Necessary attributes
     [Route("api/[controller]")]
@@ -375,6 +427,7 @@ Basic structure of a controller:
 ```
 
 Command / DTO object (it's the same):
+
 ```cs
 public record CreateClothingCmd(
     ClothingType Type,
@@ -400,10 +453,12 @@ public record CreateClothingCmd(
 
 Concatenate two strings: `string Combined => $"{Brand} {Model}";`
 
- #### Services Layer Exceptions
-  - ArgumentNullException(nameof(entity)): Throws if entity is null. Ensures required parameters are not null.
-  - InvalidOperationException(): Throws if the current state of the object does not support the requested operation.
-  - ApplicationException(): Generic exception for application-specific errors. Less preferred; use more specific exceptions.
+#### Services Layer Exceptions
+
+- ArgumentNullException(nameof(entity)): Throws if entity is null. Ensures required parameters are not null.
+- InvalidOperationException(): Throws if the current state of the object does not support the requested operation.
+- ApplicationException(): Generic exception for application-specific errors. Less preferred; use more specific
+  exceptions.
 
 #### Controller Layer Responses
   - Ok(): Returns HTTP 200 OK status. Indicates success, can return data.
