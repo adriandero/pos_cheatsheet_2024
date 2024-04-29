@@ -246,6 +246,10 @@ modelBuilder.Entity<Human>()
     .HasDiscriminator<string>("type")
     .HasValue<Teacher>("teacher")
     .HasValue<Student>("student");
+// or with an enum:
+modelBuilder.Entity<Post>().HasDiscriminator(p => p.PostType)
+    .HasValue<BlogPost>(PostType.Blog)
+    .HasValue<Comment>(PostType.Comment);
 ```
 
 Table per type:
@@ -413,8 +417,10 @@ Basic structure of a controller:
     {
     // Inject the necessary dependencies
     private readonly MyContext _context;
-    public MyController(MyContext context)
+    private readonly IService _service;  // optional
+    public MyController(MyContext context, IService service)
     {
+        _service = service;
         _context = context;
     }
     // Define a route
@@ -423,6 +429,23 @@ Basic structure of a controller:
     {
         return Ok(null!);
     }
+    
+    [HttpGet] // GET /api/My
+    [ProducesResponseType(StatusCodes.Status200OK)] // optional
+    [ProducesResponseType(StatusCodes.Status404NotFound)] // optional
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)] // optional
+    public ActionResult<IEnumerable<Entity>> GetEntities()
+    {
+        try {
+            var entities = _service.GetEntities();
+            return Ok(entities);
+        } catch (NotFoundException e) {
+            return NotFound();
+        } catch (Exception e) {
+            return StatusCode((int) HttpStatusCode.InternalServerError, e.Message);
+        }
+    }
+}
 }
 ```
 
