@@ -6,6 +6,8 @@
 > Example callout
 
 ### Code
+#### UML Guide
+![Alt text](url.png)
 
 #### Infrastructure - Context
 
@@ -338,3 +340,15 @@ public record CreateClothingCmd(
 #### Misc
 
 Concatenate two strings: `string Combined => $"{Brand} {Model}";`
+
+ #### Services Layer Exceptions
+  - ArgumentNullException(nameof(entity)): Throws if entity is null. Ensures required parameters are not null.
+  - InvalidOperationException(): Throws if the current state of the object does not support the requested operation.
+  - ApplicationException(): Generic exception for application-specific errors. Less preferred; use more specific exceptions.
+
+#### Controller Layer Responses
+  - Ok(): Returns HTTP 200 OK status. Indicates success, can return data.
+  - OkObjectResult(data): Similar to Ok(), but specifically returns data with HTTP 200 OK.
+  - BadRequest(): Returns HTTP 400 Bad Request status. Indicates client-side error.
+  - NotFound(): Returns HTTP 404 Not Found status. Indicates the requested resource does not exist.
+  - StatusCode(StatusCodes.Status500InternalServerError): Returns HTTP 500 Internal Server Error. Used for general server-side errors.
