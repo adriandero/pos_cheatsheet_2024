@@ -5,6 +5,8 @@
 > [!WARNING]  
 > Example callout
 
+
+
 ### Code
 #### UML Guide
 ![Alt text](url.png)
@@ -409,3 +411,120 @@ Concatenate two strings: `string Combined => $"{Brand} {Model}";`
   - BadRequest(): Returns HTTP 400 Bad Request status. Indicates client-side error.
   - NotFound(): Returns HTTP 404 Not Found status. Indicates the requested resource does not exist.
   - StatusCode(StatusCodes.Status500InternalServerError): Returns HTTP 500 Internal Server Error. Used for general server-side errors.
+### Concepts
+##### HATEOAS
+```cs
+Makes the API navigatable by providing links to related resources
+{
+ "id": 1,
+ "name": "John Doe",
+ "links": {
+ "self": "/api/User/1",
+ "orders": "/api/User/1/Orders",
+ }
+}
+```
+##### CQRS
+Separates read and write operations. Read operations are optimized for performance and scalability. Write
+operations are optimized for consistency and reliability.
+##### Event Sourcing
+Stores all changes to the state of an application as a sequence of events. The state of the application is
+determined by replaying the events.
+##### ORM
+Object-Relational Mapping (ORM) is a programming technique for converting data between incompatible
+type systems using object-oriented programming languages.
+###### ORMs for C#:
+- Entity Framework
+- Dapper
+- NHibernate
+
+**Transaction**: A unit of work that is performed against a database. It is important to ensure that all operations
+within a transaction are successful. If an operation fails, the transaction should be rolled back. ACID properties
+(Atomicity, Consistency, Isolation, Durability) should be ensured.
+**Provider / Dialect**: A bridge between the ORM (EntityFramework) and a specific database (e.g. SQL Server,
+SQLite, MySQL, ...). The provider is responsible for translating LINQ queries to SQL queries.
+**Benefits**: Simplifies data access, reduces boilerplate code, improves maintainability, supports multiple
+databases, supports LINQ queries, reduces SQL injection risks.
+**Drawbacks**: Performance overhead, limited control over SQL queries.
+##### SOLID
+- Single Responsibility Principle: A class should have only one reason to change
+- Open/Closed Principle: A class should be open for extension but closed for modification
+- Liskov Substitution Principle: Objects of a superclass should be replaceable with objects of a subclass
+without affecting the correctness of the program
+Interface Segregation Principle: A client should never be forced to implement an interface that it
+doesn't use
+- Dependency Inversion Principle: High-level modules should not depend on low-level modules. Both
+should depend on abstractions. Abstractions should not depend on details. Details should depend on
+abstractions.
+###### DDD - Domain-Driven Design
+-Domain: The subject area to which the application applies
+-Entity: Object with an identity
+-Value Object: Object without an identity
+-Aggregate: Cluster of associated objects treated as a unit
+-Aggregate Root: Entity that acts as a gateway to the aggregate
+-Aggregate Object: Object that is part of an aggregate
+-Bounded Context: Context in which a model applies (e.g. sales, marketing, ...)
+-Factories: Objects that create other objects
+-Services: Objects that perform operations
+##### MVC
+- Model: Data and business logic
+- View: User interface
+- Controller: Handles user input and updates the model
+##### Microservices
+- Decomposition: Splitting a monolithic application into smaller services
+- Autonomy: Services are independent and can be deployed independently
+- Resilience: Services are fault-tolerant and can recover from failures
+- Scalability: Services can be scaled independently
+
+**Message Broker**: A message broker is an intermediate bridge between the microservices, decoupling the
+sender from the receiver. It is commonly used for asynchronous event-driven communication. Examples are Kafka and RabbitMQ
+##### Authentication and Authorization
+- Authentication: Verifying the identity of a user
+- Authorization: Granting access to resources based on the identity of a user
+
+**Authentication Methods**:
+- Basic Authentication: Username and password are sent in the header
+- Bearer Authentication: Token is sent in the header (e.g. JWT)
+- OAuth2: Authorization framework for token-based authentication
+##### RESTful API Design
+- Resource-based: In REST, everything is a resource (e.g. user, order, ...). Resources are identified by URIs
+- Stateless: Each request from a client to a server must contain all the information needed to understand
+the request
+
+**Methods**:
+- GET: Retrieve a resource
+no change on the server, query parameters, no request body, parameters in URI, potentially
+cached
+- POST: Create a resource
+change on the server, request body, response includes URI of new resource
+- PUT: Update a resource (fully)
+change on the server, request body (full)
+- PATCH: Partially update a resource
+change on the server, request body (partial)
+- DELETE: Delete a resource
+change on the server, no request body, should return 204 No Content
+**Examples of Good Paths**:
+- GET /api/users - Get all users
+- POST /api/users - Create a new user
+- GET /api/users/1 - Get user with ID 1
+- PUT /api/users/1 - Update user with ID 1
+- PATCH /api/users/1 - Partially update user with ID 1
+- DELETE /api/users/1 - Delete user with ID 1
+- GET /api/users/1/orders - Get all orders of user with ID 1
+##### RPC
+Remote Procedure Call: A protocol that allows a computer program to cause a subroutine or procedure to
+execute in another address space (commonly on another computer on a shared network) without the
+programmer explicitly coding the details for this remote interaction
+Other than REST, RPC is action-based, not resource-based.
+##### WebSocket
+- Bi-directional communication between client and server
+- Persistent connection
+- Efficient for real-time applications
+##### TDD
+Process that states that tests should be written before the code. The tests should fail initially and then pass
+after the code is written.
+A good test is one that fails for the right reason.
+##### OpenAPI
+- Standard for defining RESTful APIs
+- Generates documentation and client libraries
+- Documentation (Swagger UI)
