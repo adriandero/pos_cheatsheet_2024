@@ -475,6 +475,28 @@ public record CreateClothingCmd(
 }
 ```
 
+Api.Program.cs:
+```cs
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<BlogDbContext>((options) =>
+{
+    options.UseSqlite($"Data Source={builder.Configuration.GetConnectionString("DefaultConnection")}");
+});
+builder.Services.AddTransient<IRepository<User>, Repository<User>>();
+builder.Services.AddTransient<IRepository<Comment>, Repository<Comment>>();
+builder.Services.AddTransient<IRepository<BlogPost>, Repository<BlogPost>>();
+var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+app.UseHttpsRedirection();
+app.Run();
+```
+
 #### Misc
 
 Concatenate two strings: `string Combined => $"{Brand} {Model}";`
