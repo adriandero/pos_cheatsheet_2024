@@ -9,6 +9,7 @@
 #### UML Guide
 ![Alt text](url.png)
 
+
 #### Infrastructure - Context
 
 ```cs
@@ -119,8 +120,26 @@ public record Address(
 modelBuilder.Entity<Order>().OwnsOne(p => p.ShippingAddress);
 modelBuilder.Entity<User>().OwnsMany(p => p.Address)
 ```
+##### One-to-one 1:1
+Required
+```cs
+// Principal (parent)
+public class MyClassA
+{
+    public int Id { get; set; }
+    public MyClassB? MyClassB { get; set; } // Reference navigation to dependent
+}
+// Dependent (child)
+public class MyClassB
+{
+    public int Id { get; set; }
+    public int MyClassAId { get; set; } // Required foreign key property
+    public MyClassA MyClassA { get; set; } = null!; // Required reference navigation to principal
+}
+```
+A type is usually the dependent type if it cannot logically exist without the other type. in natural parent/child relationship,  the child is  the dependent type.
 
-Setting up a **1:1** relation between class `MyClassA` and `MyClassB`.
+Explicitly setting up a **1:1** relation between class `MyClassA` and `MyClassB` in ModelBuilder. Add .IsRequired() if its a required 1:1 relation.
 ```cs
 modelBuilder
     .Entity<MyClassA>()
@@ -128,22 +147,60 @@ modelBuilder
     .WithOne(b => b.A)
     .HasForeignKey<MyClassB>(b => b.AId);
 ```
-
-Setting up an **1:N** relation between class `MyClassA` and `MyClassB`.
+##### One-to-many **1:N** 
+Required
 ```cs
-modelBuilder
-    .Entity<MyClassA>()
-    .HasMany<MyClassB>(a => a.Bs)
-    .WithOne(b => b.A)
-    .HasForeignKey(b => b.AId);
+// Principal (parent)
+public class MyClassA
+{
+    public int Id { get; set; }
+    public ICollection<MyClassB> MyClassBs { get; } = new List<MyClassB>(); // Collection navigation containing dependents
+}
+// Dependent (child)
+public class MyClassB
+{
+    public int Id { get; set; }
+    public int MyClassAId { get; set; } // Required foreign key property
+    public MyClassA MyClassA { get; set; } = null!; // Required reference navigation to principal
+}
 ```
-
-Setting up an **M:N** relation between class `MyClassA` and `MyClassB` with `MyClassC` in the middle.
+Explicitly etting up an **1:N** relation between class `MyClassA` and `MyClassB` using ModelBuilder. Add .IsRequired() if its a required 1:N relation.
 ```cs
 modelBuilder
     .Entity<MyClassA>()
-    .HasMany<MyClassB>(a => a.Bs)
-    .WithMany(b => b.As)
+    .HasMany<MyClassB>(a => a.MyClassBs)
+    .WithOne(b => b.MyClassA)
+    .HasForeignKey(b => b.MyClassAId);
+```
+##### Many-to-many M:N
+```cs
+public class MyClassA
+{
+    public int Id { get; set; }
+    public List<MyClassB> MyClassBs { get; } = [];
+    public List<MyClassCs> MyClassCs { get; } = [];
+}
+public class MyClassB
+{
+    public int Id { get; set; }
+    public List<MyClassA> MyClassAs { get; } = [];
+    public List<MyClassC> MyClassCs { get; } = [];
+}
+// join table class
+public class MyClassC
+{
+    public int MyClassAId { get; set; }
+    public int MyClassBId { get; set; }
+    public MyClassA MyClassA { get; set; } = null!;
+    public MyClassB MyClassB { get; set; } = null!;
+}
+```
+Explicitly setting up an **M:N** relation between class `MyClassA` and `MyClassB` with `MyClassC` in the middle using ModelBuilder.
+```cs
+modelBuilder
+    .Entity<MyClassA>()
+    .HasMany<MyClassB>(a => a.MyClassBs)
+    .WithMany(b => b.MyClassAs)
     .UsingEntity<MyClassC>();
 ```
 
