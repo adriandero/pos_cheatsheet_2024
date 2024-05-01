@@ -667,3 +667,71 @@ A good test is one that fails for the right reason.
 - Standard for defining RESTful APIs
 - Generates documentation and client libraries
 - Documentation (Swagger UI)
+
+## Java
+
+### Converter
+```java
+public enum Employee {
+    MANAGER(“M”),
+    ENGINEER(“E”),
+
+    private String code;
+    private Level(String code) {
+        this.code = code;
+    }
+    public String getCode() {
+        return code;
+    }
+}
+```
+```java
+@Converter(autoApply = true)
+public class EmployeeConverter implements AttributeConverter<Employee, String> {
+
+    @Override
+    public String convertToDatabaseColumn(Employee employee) {
+        if (employee == null) {
+            return null;
+        }
+        return employee.getCode();
+    }
+
+    @Override
+    public Employee convertToEntityAttribute(String code) {
+        if (code == null) {
+            return null;
+        }
+
+        return Stream.of(Employee.values())
+                .filter(c -> c.getCode().equals(code))
+                .findFirst()
+                .orElseThrow(IllegalArgumentException::new);
+    }
+}
+```
+##### Manual converter:
+```java
+@Component
+@Converter(autoApply = true)
+public class EquipmentTypeConverter implements AttributeConverter<EquipmentType, String> {
+    @Override
+    public String convertToDatabaseColumn(EquipmentType attribute) {
+        return switch (attribute) {
+            case OSCILLOSCOPE -> "O";
+            case BOX -> "B";
+            case SOLDERING_STATION -> "S";
+        };
+    }
+
+    @Override
+    public EquipmentType convertToEntityAttribute(String dbData) {
+        return switch (dbData) {
+            case "O" -> OSCILLOSCOPE;
+            case "B" -> BOX;
+            case "S" -> SOLDERING_STATION;
+            default -> throw new IllegalArgumentException("Unknown equipment type");
+        };
+    }
+}
+```
